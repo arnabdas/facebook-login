@@ -1,5 +1,5 @@
 {
-  "name": "@arnabdas/facebook-login",
+  "name": "@capacitor-community/facebook-login",
   "version": "2.0.0",
   "description": "A native plugin for Facebook Login",
   "main": "dist/esm/index.js",
