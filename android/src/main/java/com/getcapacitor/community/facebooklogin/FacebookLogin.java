@@ -186,6 +186,86 @@ public class FacebookLogin extends Plugin {
     }
 
     @PluginMethod
+    public void loginWithPublishPermissionsCustom(PluginCall call) {
+        Log.d(getLogTag(), "Entering loginWithPublishPermissionsCustom()");
+
+        PluginCall savedCall = getSavedCall();
+
+        if (savedCall != null) {
+            Log.e(getLogTag(), "login: overlapped calls not supported");
+
+            call.reject("Overlapped calls call not supported");
+
+            return;
+        }
+
+        JSArray arg = call.getArray("permissions");
+
+        Collection<String> permissions;
+
+        try {
+            permissions = arg.toList();
+        } catch (Exception e) {
+            Log.e(getLogTag(), "login: invalid 'permissions' argument", e);
+
+            call.reject("Invalid permissions argument");
+
+            return;
+        }
+
+        ParseFacebookUtils.logInWithReadPermissionsInBackground(this.getActivity(), permissions, new LogInCallback() {
+            @Override
+            public void done(ParseUser parseUser, ParseException parseException) {
+
+                if (parseUser == null) {
+                    listener.onFailure(new UserCancelledFacebookLogin());
+                } else {
+                    getPublishPermissions(parseUser);
+                }
+            }
+        });
+
+        //LoginManager.getInstance().logInWithReadPermissions(this.getActivity(), permissions);
+
+        saveCall(call);
+    }
+
+    public void getPublishPermissions(final ParseUser parseUser) {
+        LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+
+                GraphRequest request = GraphRequest.newMeRequest(loginResult.getAccessToken(),
+                        new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        // User succesfully login with all permissions
+                        // After this with these json and ParseUser , you can save your user to Parse
+                    }
+                });
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "pages_show_list,pages_manage_ads,pages_manage_metadata,pages_read_engagement,business_management,ads_management");
+
+                // 'email', 'pages_show_list', 'pages_manage_ads', 'pages_manage_metadata', 'pages_read_engagement','business_management','ads_management'
+                request.setParameters(parameters);
+                request.executeAsync();
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+
+            @Override
+            public void onError(FacebookException facebookException) {
+
+            }
+        });
+
+        LoginManager.getInstance().logInWithPublishPermissions(activity, publishPermissions);
+    }
+
+    @PluginMethod
     public void logout(PluginCall call) {
         Log.d(getLogTag(), "Entering logout()");
 
