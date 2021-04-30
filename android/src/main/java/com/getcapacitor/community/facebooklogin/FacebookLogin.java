@@ -180,7 +180,8 @@ public class FacebookLogin extends Plugin {
             return;
         }
 
-        LoginManager.getInstance().logInWithReadPermissions(this.getActivity(), permissions);
+        LoginManager.getInstance().logIn(this.getActivity(), permissions);
+        //LoginManager.getInstance().logInWithReadPermissions(this.getActivity(), permissions);
 
         saveCall(call);
     }
@@ -213,56 +214,10 @@ public class FacebookLogin extends Plugin {
             return;
         }
 
-        ParseFacebookUtils.logInWithReadPermissionsInBackground(this.getActivity(), permissions, new LogInCallback() {
-            @Override
-            public void done(ParseUser parseUser, ParseException parseException) {
-
-                if (parseUser == null) {
-                    listener.onFailure(new UserCancelledFacebookLogin());
-                } else {
-                    getPublishPermissions(parseUser);
-                }
-            }
-        });
-
         //LoginManager.getInstance().logInWithReadPermissions(this.getActivity(), permissions);
+        LoginManager.getInstance().logIn(this.getActivity(), permissions);
 
         saveCall(call);
-    }
-
-    public void getPublishPermissions(final ParseUser parseUser) {
-        LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-
-                GraphRequest request = GraphRequest.newMeRequest(loginResult.getAccessToken(),
-                        new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(JSONObject object, GraphResponse response) {
-                        // User succesfully login with all permissions
-                        // After this with these json and ParseUser , you can save your user to Parse
-                    }
-                });
-                Bundle parameters = new Bundle();
-                parameters.putString("fields", "pages_show_list,pages_manage_ads,pages_manage_metadata,pages_read_engagement,business_management,ads_management");
-
-                // 'email', 'pages_show_list', 'pages_manage_ads', 'pages_manage_metadata', 'pages_read_engagement','business_management','ads_management'
-                request.setParameters(parameters);
-                request.executeAsync();
-            }
-
-            @Override
-            public void onCancel() {
-
-            }
-
-            @Override
-            public void onError(FacebookException facebookException) {
-
-            }
-        });
-
-        LoginManager.getInstance().logInWithPublishPermissions(activity, publishPermissions);
     }
 
     @PluginMethod
